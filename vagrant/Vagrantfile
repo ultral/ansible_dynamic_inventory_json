@@ -1,0 +1,21 @@
+path_to_roles_inside_vm = '/roles'
+
+Vagrant.configure('2') do |config|
+  config.vm.synced_folder '../', '/vagrant', mount_options: ['dmode=775,fmode=755']
+  config.vm.box = 'bento/centos-7.7'
+  config.vm.provider 'virtualbox' do |box|
+    box.memory = 1024
+  end
+
+  # Create directory for roles from galaxy
+  config.vm.provision "Set permissions to #{path_to_roles_inside_vm}",
+                      type: :shell,
+                      inline: "mkdir -p #{path_to_roles_inside_vm} ;
+                               chmod o+w #{path_to_roles_inside_vm}"
+
+  config.vm.provision 'ansible_local' do |ansible|
+    ansible.playbook = '/vagrant/vagrant/provision_me.yml'
+    ansible.galaxy_roles_path = path_to_roles_inside_vm
+    ansible.galaxy_role_file = '/vagrant/vagrant/requirements.yml'
+  end
+end
